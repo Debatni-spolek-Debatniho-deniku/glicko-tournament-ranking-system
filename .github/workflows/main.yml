@@ -22,7 +22,7 @@ jobs:
         dotnet-version: 8.0 # Specify the .NET version you are using
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore --RuntimeIdentifier win-x64
 
     - name: Run tests
       run: dotnet test
