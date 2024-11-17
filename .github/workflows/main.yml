@@ -28,10 +28,10 @@ jobs:
       run: dotnet test --verbosity normal
 
     - name: Build project
-      run: dotnet build DSDD.RankingExample.csproj --configuration Release --no-restore
+      run: dotnet build DSDD.RankingExample --configuration Release --no-restore
       
     - name: Publish project
-      run: dotnet publish DSDD.RankingExample.csproj --configuration Release --output ./publish --no-build
+      run: dotnet publish DSDD.RankingExample --configuration Release --output ./publish --no-build
 
     - name: Archive published output
       run: Compress-Archive -Path ./publish/* -DestinationPath DSDD.RankingExample.zip
