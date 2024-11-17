@@ -3,51 +3,52 @@ using System.Text;
 
 namespace DSDD.RankingExample.Model;
 
-public class PlayerPool: IEnumerable<Player>
+public class PlayerPool: IEnumerable<IPlayer>
 {
-    public PlayerPool(IEnumerable<Player> players)
+    public PlayerPool(IEnumerable<IPlayer> players, ITeamFactory teamFactory)
     {
+        _teamFactory = teamFactory;
         _players = players.ToArray();
     }
 
     public IEnumerable<Match> GetRandomizedMatches()
     {
-        List<Team> unassignedTeams = new(GetRandomizedTeams());
+        List<ITeam> unassignedTeams = new(GetRandomizedTeams());
 
         while (unassignedTeams.Count > 0)
         {
-            Team? team1 = popRandomTeam();
-            Team? team2 = popRandomTeam();
-            Team? team3 = popRandomTeam();
-            Team? team4 = popRandomTeam();
+            ITeam? team1 = popRandomTeam();
+            ITeam? team2 = popRandomTeam();
+            ITeam? team3 = popRandomTeam();
+            ITeam? team4 = popRandomTeam();
 
             if (team1 is not null && team2 is not null && team3 is not null && team4 is not null)
                 yield return new(team1, team2, team3, team4);
         }
 
-        Team? popRandomTeam()
+        ITeam? popRandomTeam()
             => PopRandomItem(unassignedTeams);
     }
 
-    public IEnumerable<Team> GetRandomizedTeams()
+    public IEnumerable<ITeam> GetRandomizedTeams()
     {
-        List<Player> unassignedPlayers = new(_players);
+        List<IPlayer> unassignedPlayers = new(_players);
 
         while (unassignedPlayers.Count > 0)
         {
-            Player? player1 = popRandomPlayer();
-            Player? player2 = popRandomPlayer();
+            IPlayer? player1 = popRandomPlayer();
+            IPlayer? player2 = popRandomPlayer();
 
             if (player1 is not null && player2 is not null)
-                yield return new(player1, player2);
+                yield return _teamFactory.Create(player1, player2);
         }
 
-        Player? popRandomPlayer()
+        IPlayer? popRandomPlayer()
             => PopRandomItem(unassignedPlayers);
     }
 
-    public IEnumerator<Player> GetEnumerator()
-        => _players.Cast<Player>().GetEnumerator();
+    public IEnumerator<IPlayer> GetEnumerator()
+        => _players.Cast<IPlayer>().GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator()
         => GetEnumerator();
@@ -56,13 +57,15 @@ public class PlayerPool: IEnumerable<Player>
     {
         StringBuilder sb = new();
 
-        foreach (Player player in _players)
+        foreach (IPlayer player in _players)
             sb.AppendLine(player.ToString());
 
         return sb.ToString();
     }
 
-    private readonly Player[] _players;
+    private readonly IPlayer[] _players;
+    private readonly ITeamFactory _teamFactory;
+
     private readonly Random _random = new();
 
     private T? PopRandomItem<T>(IList<T> pool)

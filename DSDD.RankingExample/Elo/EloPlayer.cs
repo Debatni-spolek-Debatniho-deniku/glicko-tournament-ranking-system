@@ -2,7 +2,7 @@
 
 namespace DSDD.RankingExample.Elo;
 
-public class EloPlayer
+public class EloPlayer: IPlayer
 {
     public string Name { get; }
 

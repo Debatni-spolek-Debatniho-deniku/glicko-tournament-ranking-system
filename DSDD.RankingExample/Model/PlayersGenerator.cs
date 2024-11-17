@@ -4,10 +4,10 @@ namespace DSDD.RankingExample.Model;
 
 public class PlayersGenerator
 {
-    public static IEnumerable<Player> Generate(int count)
+    public static IEnumerable<IPlayer> Generate(int count, IPlayerFactory playerFactory)
         => GenerateAlphabetSequence(count)
             .Select(name => name.ToUpper())
-            .Select(name => new Player(name));
+            .Select(playerFactory.Create);
 
     private static IEnumerable<string> GenerateAlphabetSequence(int count)
     {

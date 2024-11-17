@@ -1,8 +1,8 @@
-﻿using DSDD.RankingExample.Glicko;
+﻿using DSDD.RankingExample.Model;
 
-namespace DSDD.RankingExample.Model;
+namespace DSDD.RankingExample.Glicko;
 
-public class Player
+public class GlickoPlayer: IPlayer
 {
     public string Name { get; }
 
@@ -13,7 +13,7 @@ public class Player
     /// </summary>
     public double RatingDeviation { get; set; } = GlickoConsts.InitialRatingDeviation;
 
-    public Player(string name)
+    public GlickoPlayer(string name)
     {
         Name = name;
     }

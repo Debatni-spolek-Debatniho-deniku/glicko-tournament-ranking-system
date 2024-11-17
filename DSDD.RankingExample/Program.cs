@@ -1,4 +1,5 @@
 ﻿using DSDD.RankingExample;
+using DSDD.RankingExample.Elo;
 using DSDD.RankingExample.Glicko;
 using DSDD.RankingExample.Model;
 using Spectre.Console;
@@ -8,10 +9,37 @@ string algoChoice = AnsiConsole
         .Title("Choose algorithm:")
         .AddChoices(AlgorithmChoice.ELO, AlgorithmChoice.GLICKO_1));
 
+AnsiConsole.MarkupLine($"[maroon]Current algorith is: {algoChoice}[/]");
+AnsiConsole.WriteLine("");
+
+IPlayerFactory playerFactory;
+ITeamFactory teamFactory;
+IPlayerRatingUpdater playerRatingUpdater;
+
+switch (algoChoice)
+{
+    case AlgorithmChoice.ELO:
+        EloFactories eloFactories = new();
+        playerFactory = eloFactories;
+        teamFactory = eloFactories;
+
+        playerRatingUpdater = new EloPlayerRatingUpdater();
+        break;
+    case AlgorithmChoice.GLICKO_1:
+        GlickoFactories glickoFactories = new();
+        playerFactory = glickoFactories;
+        teamFactory = glickoFactories;
+
+        playerRatingUpdater = new GlickoPlayerRatingUpdater();
+        break;
+    default:
+        throw new IndexOutOfRangeException();
+}
+
 int playerCount = AnsiConsole.Prompt(
     new TextPrompt<int>("Number of players?").Validate(value => value % 8 == 0, "Must be divisible by 8!"));
 
-PlayerPool pool = new(PlayersGenerator.Generate(playerCount));
+PlayerPool pool = new(PlayersGenerator.Generate(playerCount, playerFactory), teamFactory);
 
 while (true)
     RenderMainMenu();
@@ -59,13 +87,13 @@ void StartRound()
         AnsiConsole.WriteLine($"CO: {match.ClosingOpossition}");
         AnsiConsole.WriteLine("");
 
-        IReadOnlyList<Team> winningOrder = PickTeamOrder(match);
+        IReadOnlyList<ITeam> winningOrder = PickTeamOrder(match);
 
-        GlickoHelpers.UpdateRatings(winningOrder);
+        playerRatingUpdater.UpdateRatings(winningOrder);
     }
 }
 
-IReadOnlyList<Team> PickTeamOrder(Match match)
+IReadOnlyList<ITeam> PickTeamOrder(Match match)
 {
     HashSet<string> options = new() { "OG", "OO", "CG", "CO" };
 

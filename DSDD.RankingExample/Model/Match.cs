@@ -4,15 +4,15 @@ public class Match
 {
     public string Id { get; }
 
-    public Team OpenningGovernment { get; }
+    public ITeam OpenningGovernment { get; }
 
-    public Team OpenningOposition { get; }
+    public ITeam OpenningOposition { get; }
 
-    public Team ClosingGovernment { get; }
+    public ITeam ClosingGovernment { get; }
     
-    public Team ClosingOpossition { get; }
+    public ITeam ClosingOpossition { get; }
 
-    public Match(Team openningGovernment, Team openningOposition, Team closingGovernment, Team closingOpossition)
+    public Match(ITeam openningGovernment, ITeam openningOposition, ITeam closingGovernment, ITeam closingOpossition)
     {
         Id = Interlocked.Increment(ref _lastId).ToString();
 
