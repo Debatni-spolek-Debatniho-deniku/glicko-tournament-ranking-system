@@ -25,19 +25,16 @@ jobs:
       run: dotnet restore
 
     - name: Run tests
-      run: dotnet test --verbosity normal
+      run: dotnet test
 
     - name: Build project
-      run: dotnet build DSDD.RankingExample --configuration Release --no-restore
+      run: dotnet build DSDD.RankingExample --configuration Release --no-restore --self-contained
       
     - name: Publish project
       run: dotnet publish DSDD.RankingExample --configuration Release --output ./publish --no-build
-
-    - name: Archive published output
-      run: Compress-Archive -Path ./publish/* -DestinationPath DSDD.RankingExample.zip
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: DSDD.RankingExample.zip
-        path: DSDD.RankingExample.zip
+        path: ./publish/*
