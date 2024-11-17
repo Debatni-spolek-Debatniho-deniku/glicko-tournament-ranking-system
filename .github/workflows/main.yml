@@ -26,12 +26,9 @@ jobs:
 
     - name: Run tests
       run: dotnet test --no-restore
-
-    - name: Build project
-      run: dotnet build DSDD.RankingExample --configuration Release --no-restore
       
     - name: Publish project
-      run: dotnet publish DSDD.RankingExample --configuration Release --output ./publish --no-build --self-contained
+      run: dotnet publish DSDD.RankingExample --configuration Release --output ./publish --self-contained
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
