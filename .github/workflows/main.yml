@@ -25,13 +25,13 @@ jobs:
       run: dotnet restore --runtime win-x64
 
     - name: Run tests
-      run: dotnet test
+      run: dotnet test --no-restore
 
     - name: Build project
-      run: dotnet build DSDD.RankingExample --configuration Release --no-restore --self-contained
+      run: dotnet build DSDD.RankingExample --configuration Release --no-restore
       
     - name: Publish project
-      run: dotnet publish DSDD.RankingExample --configuration Release --output ./publish --no-build
+      run: dotnet publish DSDD.RankingExample --configuration Release --output ./publish --no-build --self-contained
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
