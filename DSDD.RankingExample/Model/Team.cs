@@ -4,6 +4,8 @@ namespace DSDD.RankingExample.Model;
 
 public class Team: IEnumerable<Player>
 {
+    public string Name => $"{Player1.Name}-{Player2.Name}";
+
     public Player Player1 { get; }
 
     public Player Player2 { get; }
@@ -30,5 +32,5 @@ public class Team: IEnumerable<Player>
     }
 
     public override string ToString()
-        => $"Team {Player1.Name}{Player2.Name}: Rating={Rating:F1}, RatingDeviation={RatingDeviation:F1}";
+        => $"Team {Name}: Rating={Rating:F1}, RatingDeviation={RatingDeviation:F1}";
 }

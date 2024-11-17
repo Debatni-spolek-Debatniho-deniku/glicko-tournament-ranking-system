@@ -1,13 +1,16 @@
-﻿namespace DSDD.RankingExample.Model;
+﻿using System.Collections;
+using System.Text;
 
-public class PlayerPool
+namespace DSDD.RankingExample.Model;
+
+public class PlayerPool: IEnumerable<Player>
 {
-    public PlayerPool(Player[] players)
+    public PlayerPool(IEnumerable<Player> players)
     {
-        _players = players;
+        _players = players.ToArray();
     }
 
-    public IEnumerable<Match> RandomizeMatches()
+    public IEnumerable<Match> GetRandomizedMatches()
     {
         List<Team> unassignedTeams = new(GetRandomizedTeams());
 
@@ -41,6 +44,22 @@ public class PlayerPool
 
         Player? popRandomPlayer()
             => PopRandomItem(unassignedPlayers);
+    }
+
+    public IEnumerator<Player> GetEnumerator()
+        => _players.Cast<Player>().GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => GetEnumerator();
+
+    public override string ToString()
+    {
+        StringBuilder sb = new();
+
+        foreach (Player player in _players)
+            sb.AppendLine(player.ToString());
+
+        return sb.ToString();
     }
 
     private readonly Player[] _players;

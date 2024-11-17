@@ -1,4 +1,6 @@
 ﻿using DSDD.RankingExample.Model;
+using System.Numerics;
+using System.Text.RegularExpressions;
 
 namespace DSDD.RankingExample.Glicko;
 
@@ -11,7 +13,7 @@ public static class GlickoHelpers
     /// The more uncertain (higher <see cref="ratingDevaition"/>, higher uncertainty) the rating is, the less impact it has.
     /// </summary>
     public static double CalculateG(double ratingDevaition)
-        => 1 / Math.Sqrt(1 + 3 * Math.Pow(ratingDevaition, 2) / Math.PI / Math.PI);
+        => 1 / Math.Sqrt(1 + 3 * Math.Pow(GlickoConsts.Q, 2) * Math.Pow(ratingDevaition, 2) / Math.Pow(Math.PI, 2));
 
     /// <summary>
     /// Probability of <see cref="rating1"/> beating <see cref="rating2"/>.
@@ -21,31 +23,66 @@ public static class GlickoHelpers
     /// The more closer is E to 0, the more likely is <see cref="rating1"/> to win 
     /// </summary>
     public static double CalculateE(double rating1, double rating2, double ratingDeviationOfRating2)
-        => 1 / (1 + Math.Exp(-CalculateG(ratingDeviationOfRating2) * (rating1 - rating2) / 400));
+        => 1.0 / (1.0 + Math.Pow(10, -ratingDeviationOfRating2 * (rating1 - rating2) / 400));
 
     public static void UpdateRatings(IReadOnlyList<Team> teamsInWinningOrder)
     {
         IReadOnlyList<Team> teams = teamsInWinningOrder;
 
+        // New values are temporarily stored here as values from Player object are used in the calculation.
+        Dictionary<Player, (double NewRating, double NewRatingDeviation)> newRatings = teams
+            .SelectMany(t => t)
+            .ToDictionary(p => p, p => (p.Rating, p.RatingDeviation));
+
         for (int i = 0; i < teams.Count; i++)
         {
             Team currentTeam = teams[i];
 
-            // Will range from 0 to 3.
-            // Expected score will range from 0 to 3 as well (see Sum bellow -> sums number between 0 and 1 three times).
-            // It is important that E and S (score) are of the same scale.
-            double score = i;
+            // Team first in the list will have score 1.
+            // Team last in the list will have score 0.
+            double score = deriveScoresFromRank(i + 1);
 
             IReadOnlyList<Team> opponents = teams.Where(t => t != currentTeam).ToArray();
 
-            // Overall uncertaitity factor in oponents' ratings.
-            double oponnentsG = opponents.Sum(opponent => CalculateG(opponent.RatingDeviation));
+            double gSum = 0;
+            double eSum = 0;
 
-            double expectedScore = opponents.Sum(oponnent =>
-                CalculateE(currentTeam.Rating, oponnent.Rating, oponnent.RatingDeviation));
+            foreach (Team opponent in opponents)
+            {
+                double g = CalculateG(opponent.RatingDeviation);
+                double e = CalculateE(currentTeam.Rating, opponent.Rating, opponent.RatingDeviation);
 
+                gSum += Math.Pow(g, 2) * e * (1 - e);
+                eSum += g * (score - e);
+            }
+            
             foreach (Player player in currentTeam)
-                UpdatePlayer(player, score, expectedScore, oponnentsG);
+            {
+                double d2 = 1.0 / (Math.Pow(player.RatingDeviation, 2) + (Math.Pow(GlickoConsts.Q, 2) * gSum));
+
+                var newTuple = newRatings[player];
+
+                newTuple.NewRating += GlickoConsts.Q / (1 / Math.Pow(player.RatingDeviation, 2) + Math.Pow(GlickoConsts.Q, 2) * gSum) * eSum;
+                newTuple.NewRatingDeviation = 1.0 / Math.Sqrt((1.0 / Math.Pow(player.RatingDeviation, 2)) + (Math.Pow(GlickoConsts.Q, 2) * gSum));
+
+                newRatings[player] = newTuple;
+            }
+        }
+
+        // Promote new ratings back to all players.
+        foreach (var kvp in newRatings)
+        {
+            kvp.Key.Rating = kvp.Value.NewRating;
+            kvp.Key.RatingDeviation = kvp.Value.NewRatingDeviation;
+        }
+        
+        double deriveScoresFromRank(int playerRank)
+        {
+            // Normalized scores: 1 for first, 0 for last, equally distributed in between
+            double maxScore = 1.0;
+            double minScore = 0.0;
+            double step = (maxScore - minScore) / 3; // 4 players: 3 intervals
+            return new double[] { maxScore, maxScore - step, maxScore - 2 * step, minScore }[playerRank - 1];
         }
     }
 
@@ -61,12 +98,13 @@ public static class GlickoHelpers
     /// </remarks>
     public static void UpdatePlayer(Player player, double actualScore, double expectedScore, double oponentsG)
     {
-        // Certainty of expected outcome. The lower the more reliable the outcome is.
-        double v = 1 / (oponentsG * expectedScore * (1 - expectedScore));
-        // The higher Δ is, the more player outperformed expectation.
-        double delta = v * oponentsG * (actualScore - expectedScore);
-        
-        player.RatingDeviation = Math.Sqrt((1 / (1 / (Math.Pow(player.RatingDeviation, 2)) + 1 / v)));
-        player.Rating += player.RatingDeviation * (actualScore - expectedScore);
+        player.Rating += (GlickoConsts.Q /
+            (1 / Math.Pow(player.RatingDeviation, 2) + Math.Pow(GlickoConsts.Q, 2) * oponentsG))
+            
+            
+            * oponentsG * (actualScore / - expectedScore);
+
+
+        player.RatingDeviation = 1 / Math.Sqrt(1 / (Math.Pow(player.RatingDeviation, 2) + Math.Pow(GlickoConsts.Q, 2) * oponentsG));
     }
 }
