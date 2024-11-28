@@ -34,7 +34,9 @@ public class EloPlayerRatingUpdater : IPlayerRatingUpdater
             foreach (EloTeam oponnent in opponents)
             {
                 double expectedScore = EloHelpers.CalculateE(currentTeam.Rating, oponnent.Rating);
-
+                // TODO: stejné zamyšlení jako u GlickoPayerRatingUpdater.
+                // Teďka hráč fakticky dostává 3 různé přírůstky ratingu. Nedává smysl je spíše vyprůměrovat?
+                // Zejména jestli chceme přidávat speakerpointy, bude potřeba alespoň skóre převádět do škály 0 až 1.
                 eSum += EloConsts.K * (score - expectedScore);
             }
 
