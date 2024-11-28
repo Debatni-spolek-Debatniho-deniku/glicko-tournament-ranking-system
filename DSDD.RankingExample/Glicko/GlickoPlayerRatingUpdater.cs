@@ -35,6 +35,9 @@ public class GlickoPlayerRatingUpdater: IPlayerRatingUpdater
             foreach (GlickoTeam opponent in opponents)
             {
                 double g = GlickoHelpers.CalculateG(opponent.RatingDeviation);
+                // TODO: Nedává smysl e zprůměrovat protože score je na škále 0 až 1 zatímco pro 3 oponenty s sumě je na škále 0 až 3?
+                // Teď to vypadá jako že hráč odehrál 3 různé zápasy 1v1 namísto jednoho zápasu, tj. může dostat až 3x přírůstek za výhru.
+                // Algoritmus, kdy se hráč ocení skóre 0 až 3 a dojde k sumě 3 e (taky na 0 až 3) s tím že (score - e) / 3 může být lepší.
                 double e = GlickoHelpers.CalculateE(currentTeam.Rating, opponent.Rating, opponent.RatingDeviation);
 
                 gSum += Math.Pow(g, 2) * e * (1 - e);
